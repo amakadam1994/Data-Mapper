@@ -5,7 +5,7 @@ from util.utils import getCommonJars
 from mapper.fuzzyMatch import mapColumns
 from reader.MySqlReader import MySqlReader
 from writer.MySqlWriter import MySqlWriter
-from util.sparkUtils import getSparkSession
+from util.sparkUtils import getSparkSession, convertDataType
 from reader.MongoDbReader import MongoDbReader
 from writer.MongoDbWriter import MongoDbWriter
 
@@ -24,6 +24,7 @@ def writeDF(spark, DBConnector, databaseName, tableName, config, df, id_column):
         return MongoDbWriter.write(spark, databaseName, tableName, config[DBConnector], df, id_column)
     else:
         print("Does not find writer!! Please create writer for this connector!")
+
 
 # MongoDB, MySql
 if __name__ == '__main__':
@@ -64,7 +65,8 @@ if __name__ == '__main__':
     targetDF = getDF(spark, target, target_db, target_table, config)
 
     if targetDF.schema:
-        df = mapColumns(spark, sourceDF, targetDF)
-        writeDF(spark, target, target_db, target_table, config, df, id_column)
+        map_df = mapColumns(spark, sourceDF, targetDF)
+        dtype_df= convertDataType(map_df, targetDF)
+        writeDF(spark, target, target_db, target_table, config, dtype_df, id_column)
     else:
         print("Target table doesn't have schema!! Please try with different table or create new table!")
