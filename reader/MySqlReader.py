@@ -1,10 +1,10 @@
 class MySqlReader:
-    def read(spark, DbName, TblName, db_conf):
+    def read(spark, db_name, tbl_name, db_conf):
         data_frame = spark.read. \
             format("jdbc"). \
-            option("url", db_conf['URL'] + DbName). \
+            option("url", db_conf['URL'] + db_name). \
             option("driver", db_conf['DB_DRIVER']). \
-            option("dbtable", TblName). \
+            option("dbtable", tbl_name). \
             option("user", db_conf['DB_USER']). \
             option("password", db_conf['DB_PASS']). \
             load()

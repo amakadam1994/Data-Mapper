@@ -1,5 +1,6 @@
 import os
 import argparse
+import logging
 import configparser
 from util.utils import get_common_jars
 from mapper.fuzzyMatch import map_columns
@@ -9,6 +10,7 @@ from util.sparkUtils import get_spark_session, convert_data_type
 from reader.MongoDbReader import MongoDbReader
 from writer.MongoDbWriter import MongoDbWriter
 
+
 def get_df(spark, DBConnector, databaseName, tableName, config):
     if DBConnector == "MySql":
         return MySqlReader.read(spark, databaseName, tableName, config[DBConnector])
@@ -17,6 +19,7 @@ def get_df(spark, DBConnector, databaseName, tableName, config):
     else:
         print("Does not find reader!! Please create reader for this connector!")
 
+
 def write_df(spark, DBConnector, databaseName, tableName, config, df, id_column):
     if DBConnector == "MySql":
         return MySqlWriter.write(spark, databaseName, tableName, config[DBConnector], df)
@@ -24,6 +27,7 @@ def write_df(spark, DBConnector, databaseName, tableName, config, df, id_column)
         return MongoDbWriter.write(spark, databaseName, tableName, config[DBConnector], df, id_column)
     else:
         print("Does not find writer!! Please create writer for this connector!")
+
 
 # MongoDB, MySql
 if __name__ == '__main__':
@@ -38,7 +42,6 @@ if __name__ == '__main__':
     parser.add_argument("--column_percentage", help="some useful description.")
     parser.add_argument("--jobtype", help="manual or auto.")
 
-
     args = parser.parse_args()
 
     source = args.source
@@ -48,12 +51,12 @@ if __name__ == '__main__':
     source_table = args.source_table
     target_table = args.target_table
     id_column = args.id_column
-    Column_Percentage = args.column_percentage
-    jobType = args.jobtype
+    column_percentage = args.column_percentage
+    job_type = args.jobtype
+    logging.info(source, " ", source_db, " ", source_table, " ", target, " ", target_db, " ", target_table)
     print(source, " ", source_db, " ", source_table, " ", target, " ", target_db, " ", target_table)
 
     parent_path = os.path.abspath('')
-    print("path:", parent_path)
 
     file = parent_path + '\config\config.ini'
     config = configparser.ConfigParser()
@@ -62,16 +65,13 @@ if __name__ == '__main__':
     jars_string = get_common_jars(parent_path, source, target, config)
     spark = get_spark_session(jars_string)
 
-    sourceDF = get_df(spark, source, source_db, source_table, config)
+    source_df = get_df(spark, source, source_db, source_table, config)
+    target_df = get_df(spark, target, target_db, target_table, config)
 
-    # For testing only writes to terget
-    # MongoDbWriter.write(spark, target_db, target_table, config[target], sourceDF, id_column)
-
-    targetDF = get_df(spark, target, target_db, target_table, config)
-
-    if targetDF.schema:
-        map_df = map_columns(spark, sourceDF, targetDF, Column_Percentage,jobType)
-        #dtype_df= convert_data_type(map_df, targetDF)
+    if target_df.schema:
+        map_df = map_columns(spark, source_df, target_df, column_percentage, job_type)
+        dtype_df = convert_data_type(map_df, target_df)
         write_df(spark, target, target_db, target_table, config, map_df, id_column)
     else:
+        logging.info("Target table doesn't have schema!! Please try with different table or create new table!")
         print("Target table doesn't have schema!! Please try with different table or create new table!")

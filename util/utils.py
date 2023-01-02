@@ -1,6 +1,10 @@
+import logging
+
+
 def get_common_jars(parent_path, source, target, config):
     jars = []
     source_jars_comma = config[source]['jars']
+    logging.info("source_jars_comma:", source_jars_comma)
     print("source_jars_comma:", source_jars_comma)
     if source_jars_comma == None or source_jars_comma == "None":
         pass
