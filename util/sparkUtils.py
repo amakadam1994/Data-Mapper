@@ -59,6 +59,8 @@ def get_datatype_converted_column(df, scolumn, sdata_type, tdata_type, new_colum
             logging.error("Data type can not be casted. going ahead with existing data type")
             print("Data type can not be casted. going ahead with existing data type")
             return df.withColumn(new_column, df[scolumn])
+    else:
+        return df.withColumn(new_column, df[scolumn])
 
 
 def convert_data_type(source_df, target_df):
