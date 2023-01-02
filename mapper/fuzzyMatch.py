@@ -125,7 +125,6 @@ def map_columns(spark, source_df, target_df, column_percentage, job_type):
     flag = True
 
     if len({i[0] for i in final}) == len({i[1] for i in final}):
-        # df = change_df_column_name(Final, source_df)
         for key, value in final_map.items():
             if value < column_percentage:
                 flag = False
