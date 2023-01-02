@@ -1,4 +1,4 @@
-def getCommonJars(parent_path, source, target, config):
+def get_common_jars(parent_path, source, target, config):
     jars = []
     source_jars_comma = config[source]['jars']
     print("source_jars_comma:", source_jars_comma)

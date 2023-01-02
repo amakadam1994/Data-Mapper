@@ -3,7 +3,7 @@ from pyspark.sql.types import ArrayType, BinaryType, BooleanType, DateType, \
     MapType, NullType, NumericType, StringType, StructType, TimestampType, IntegerType
 
 
-def getSparkSession(jars):
+def get_spark_session(jars):
     print("Jars:", jars)
     if jars is None:
         return SparkSession \
@@ -17,18 +17,18 @@ def getSparkSession(jars):
             .appName("DataMapper") \
             .getOrCreate()
 
-def getDfColumns(spark, df):
+def get_df_columns(spark, df):
     schema = [i for i in df.schema]
     return schema
 
-def getDfColumnList(schema):
+def get_df_columns_list(schema):
     column_list = []
     for field in schema:
         column_list.append(field.name)
     return column_list
 
 
-def getDataConvertedColumn(df, scolumn, sdata_type, tdata_type, new_column):
+def get_datatype_converted_column(df, scolumn, sdata_type, tdata_type, new_column):
     supported_pairs= [
         ["IntegerType","StringType"], ["StringType","DateType"], ["StringType","BooleanType"]
     ]
@@ -57,11 +57,8 @@ def getDataConvertedColumn(df, scolumn, sdata_type, tdata_type, new_column):
             return df.withColumn(new_column, df[scolumn])
 
 
-def convertDataType(sourceDF, targetDF):
+def convert_data_type(sourceDF, targetDF):
     source_schema = [i for i in sourceDF.schema]
-    # sd = sourceDF
-    # sd = sd.withColumn("new_col", sourceDF['Country'].cast('int')).drop('Country').withColumnRenamed('new_col',
-    #                                                                                                  'Country')
     target_schema = [i for i in targetDF.schema]
 
     for sfield in source_schema:
@@ -74,7 +71,7 @@ def convertDataType(sourceDF, targetDF):
                     print("Found different datatype in target. Converting source datatype to target datatype")
                     new_column = "new_column"
                     try:
-                        sourceDF1 = getDataConvertedColumn(sourceDF, sfield.name,sfield.dataType, tfield.dataType, new_column)
+                        sourceDF1 = get_datatype_converted_column(sourceDF, sfield.name,sfield.dataType, tfield.dataType, new_column)
                         print("Before Converting data type")
                         sourceDF1.printSchema()
                         sourceDF2 = sourceDF1.drop(sfield.name).withColumnRenamed(new_column, sfield.name)
@@ -83,3 +80,10 @@ def convertDataType(sourceDF, targetDF):
                         sourceDF2.show()
                     except Exception as e:
                         print("Exception while converting data type:",e)
+
+def change_df_column_name(Final, source_df):
+    print("Final and source_df",Final)
+    source_df.show()
+    # source_df = source_df.select(*([col(i[0]).alias(i[1]) for i in Final] ))
+    df1 = source_df.rdd.toDF(Final)
+    return df1
