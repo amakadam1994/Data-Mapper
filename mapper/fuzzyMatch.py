@@ -123,10 +123,13 @@ def map_columns(spark, source_df, target_df, column_percentage, job_type):
             trial_fuzzy(element_index, final, source_columns, destination, final_map)
     flag = True
 
-    if len({i[0] for i in final}) == len({i[1] for i in final}):
-        for key, value in final_map.items():
-            if value < column_percentage:
-                flag = False
+    for i in range(len(source_columns)):
+        print(i, source_columns[i], ":", final[i])
+
+    # if len({i[0] for i in final}) == len({i[1] for i in final}):
+    for key, value in final_map.items():
+        if int(value) < int(column_percentage):
+            flag = False
     if flag:
         df_auto = change_df_column_name(final, source_df)
         logging.info("Dynamically Modified Source table")
