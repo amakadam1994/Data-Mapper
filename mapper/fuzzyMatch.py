@@ -2,9 +2,8 @@ import logging
 from fuzzywuzzy import fuzz
 from util.sparkUtils import get_df_columns, get_df_columns_list, change_df_column_name
 
-
-def trial_fuzzy(element, final, source, destination, final_map):
-    source_element = source[element]
+def trial_fuzzy(element_index, final, source_columns, destination, final_map):
+    source_element = source_columns[element_index]
     ignore_list = []
     dest = []
     for m, target_element in enumerate(destination):
@@ -19,14 +18,14 @@ def trial_fuzzy(element, final, source, destination, final_map):
             else:
                 pass
     print(destination[p])
-    final[element] = destination[p]
-    final_map[source[element]] = index
+    final[element_index] = destination[p]
+    final_map[source_columns[element_index]] = index
 
 
-def apply_fuzzy_wuzzy(final, source, destination, final_map):
+def apply_fuzzy_wuzzy(final, source_columns, destination, final_map):
     ignore_list = []
     percent_matching = []
-    for i in source:
+    for i in source_columns:
         dest = []
         for m, n in enumerate(destination):
             val = fuzz.ratio(i.lower(), n.lower())
@@ -40,8 +39,8 @@ def apply_fuzzy_wuzzy(final, source, destination, final_map):
                 else:
                     pass
         percent_matching.append([destination[p], p, o])
-    logging.info(percent_matching)
-    print(percent_matching)
+    logging.info("percent_matching:{}".format(percent_matching))
+    print("percent_matching:{}".format(percent_matching))
     for i in percent_matching:
         final.append(i[0])
         final_map[i[0]] = i[2]
@@ -49,10 +48,10 @@ def apply_fuzzy_wuzzy(final, source, destination, final_map):
     for i in percent_matching:
         dct[i[1]] = dct.get(i[1], 0) + 1
     dct1 = {key: value for (key, value) in dct.items() if value > 1}
-    print(dct1)
     for i in dct1.keys():
         xyz = []
         for j, k in enumerate(percent_matching):
+            logging.info("J and K:{} , {}".format(j,k))
             print("J and K:", j, ",", k)
             if i == k[1]:
                 xyz.append([j, k[2]])
@@ -61,15 +60,15 @@ def apply_fuzzy_wuzzy(final, source, destination, final_map):
             final[i[0]] = "Not Identified"
 
 
-def re_arrange_columns(df, df1, df_dest):
+def re_arrange_columns(source_df, auto_df, target_df):
     logging.info("Please check below schema for data mapping if correcct or not")
     print("Please check below schema for data mapping if correcct or not")
 
-    Auto_source = df1.columns
-    Given_source = df.columns
-    for i in range(len(Auto_source)):
-        logging.info(i, Given_source[i], ":", Auto_source[i])
-        print(i, Given_source[i], ":", Auto_source[i])
+    auto_source = auto_df.columns
+    given_source = source_df.columns
+    for i in range(len(auto_source)):
+        logging.info(i, given_source[i], ":", auto_source[i])
+        print(i, given_source[i], ":", auto_source[i])
 
     logging.info("Please check if all columns are mapped correctly or not ")
     print("Please check if all columns are mapped correctly or not ")
@@ -78,26 +77,26 @@ def re_arrange_columns(df, df1, df_dest):
     while ip == "N":
         logging.info("Which number's column you want to change")
         print("Which number's column you want to change")
-        ColumnNo = int(input())
-        logging.info(df_dest.columns)
-        print(df_dest.columns)
-        ColumnName = input("Please give column name")
-        Auto_source[ColumnNo] = ColumnName
+        column_no = int(input())
+        logging.info(target_df.columns)
+        print(target_df.columns)
+        column_name = input("Please give column name")
+        auto_source[column_no] = column_name
         logging.info("Please check  below columns ")
         print("Please check  below columns ")
-        for i in range(len(Auto_source)):
-            print(i, Given_source[i], ":", Auto_source[i])
+        for i in range(len(auto_source)):
+            print(i, given_source[i], ":", auto_source[i])
         ip = input("Now please check if all columns correctly mappped, Y/N")
-    df_xyz = df.rdd.toDF(Auto_source)
-    df_xyz.show()
-    return df_xyz
+    converted_source_df = source_df.rdd.toDF(auto_source)
+    converted_source_df.show()
+    return converted_source_df
 
 
 def map_columns(spark, source_df, target_df, column_percentage, job_type):
     source_schema = get_df_columns(spark, source_df)
     logging.info("source_columns:", source_schema)
     print("source_columns:", source_schema)
-    Source1 = get_df_columns_list(source_schema)
+    source_columns = get_df_columns_list(source_schema)
     df = source_df
     logging.info("Source table")
     print("Source table")
@@ -112,16 +111,16 @@ def map_columns(spark, source_df, target_df, column_percentage, job_type):
     print("Destination table")
     df_dest.show(5)
 
-    logging.info("Check below matching for perticular  columns")
-    print("Check below matching for perticular  columns")
+    logging.info("Check below matching for particular columns")
+    print("Check below matching for particular columns")
     logging.info("Destination_Column", ":", "Source_Column")
     print("Destination_Column", ":", "Source_Column")
     final = []
     final_map = {}
-    apply_fuzzy_wuzzy(final, Source1, destination, final_map)
-    for a, b in enumerate(final):
-        if b == "Not Identified":
-            trial_fuzzy(a, final, Source1, destination, final_map)
+    apply_fuzzy_wuzzy(final, source_columns, destination, final_map)
+    for element_index, element in enumerate(final):
+        if element == "Not Identified":
+            trial_fuzzy(element_index, final, source_columns, destination, final_map)
     flag = True
 
     if len({i[0] for i in final}) == len({i[1] for i in final}):
@@ -129,18 +128,16 @@ def map_columns(spark, source_df, target_df, column_percentage, job_type):
             if value < column_percentage:
                 flag = False
     if flag:
-        df_auto1 = change_df_column_name(final, source_df)
+        df_auto = change_df_column_name(final, source_df)
         logging.info("Dynamically Modified Source table")
         print("Dynamically Modified Source table")
-        df_auto1.show()
-        return df_auto1
+        df_auto.show()
+        return df_auto
 
     else:
         logging.info('Need user input for column mapping')
         print('Need user input for column mapping')
-
         df_auto = change_df_column_name(final, source_df)
-
         if job_type == "manual":
             rearranged_df = re_arrange_columns(source_df, df_auto, target_df)
             return rearranged_df
