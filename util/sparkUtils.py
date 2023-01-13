@@ -74,7 +74,7 @@ def convert_data_type(source_df, target_df):
                     pass
                 else:
                     logging.info("Found different datatype in target. Converting source datatype to target datatype")
-                    print("Found different datatype in target. Converting source datatype to target datatype")
+                    print("Found different datatype in target. Converting source datatype to target datatype. Source:",sfield.dataType, " Target:",tfield.dataType, " Column Name:",sfield.name)
                     new_column = "new_column"
                     try:
                         source_df1 = get_datatype_converted_column(source_df, sfield.name, sfield.dataType,

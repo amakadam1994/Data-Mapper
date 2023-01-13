@@ -70,6 +70,8 @@ if __name__ == '__main__':
 
     if target_df.schema:
         map_df = map_columns(spark, source_df, target_df, column_percentage, job_type)
+        if "Not Identified" in map_df.columns:
+            map_df = map_df.drop("Not Identified")
         dtype_df = convert_data_type(map_df, target_df)
         write_df(spark, target, target_db, target_table, config, map_df, id_column)
     else:
