@@ -137,6 +137,7 @@ def map_columns(spark, source_df, target_df, column_percentage, job_type):
 
 
 
+
     if flag:
         df_auto = change_df_column_name(final, source_df)
         logging.info("Dynamically Modified Source table")

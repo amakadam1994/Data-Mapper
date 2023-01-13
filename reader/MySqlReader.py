@@ -1,6 +1,5 @@
 class MySqlReader:
     def read(spark, db_name, tbl_name, db_conf):
-
         data_frame = spark.read. \
             format("jdbc"). \
             option("url", db_conf['URL'] + db_name). \
