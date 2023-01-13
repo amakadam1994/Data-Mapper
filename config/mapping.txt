@@ -1,0 +1,17 @@
+student_id : stud_id
+enrollment_number : enroll_num
+first_name : firstname
+middle_name : middname
+last_name : lastname
+birthday : bday
+date_of_enrollment : enrollmentdate
+email_id : mail_id
+gender : gender
+course_enrolled : enrolled_course
+contact_number : contact_no
+alternate_number : alter_number
+category : category
+address : address
+city : city
+country : country
+pincode : pincode

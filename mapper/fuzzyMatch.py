@@ -1,4 +1,6 @@
 import logging
+import os
+
 from fuzzywuzzy import fuzz
 from util.sparkUtils import get_df_columns, get_df_columns_list, change_df_column_name
 
@@ -10,6 +12,7 @@ def trial_fuzzy(element_index, final, source_columns, destination, final_map):
         val = fuzz.ratio(source_element.lower(), target_element.lower())
         dest.append(val)
     index = 0
+    p= None
     for j, k in enumerate(dest):
         if destination[j] not in final and j not in ignore_list:
             if k >= index:
@@ -17,9 +20,10 @@ def trial_fuzzy(element_index, final, source_columns, destination, final_map):
                 p = j
             else:
                 pass
-    print(destination[p])
-    final[element_index] = destination[p]
-    final_map[source_columns[element_index]] = index
+    if p is not None:
+        final[element_index] = destination[p]
+        #final_map[source_columns[element_index]] = index
+        final_map[destination[p]] = index
 
 
 def apply_fuzzy_wuzzy(final, source_columns, destination, final_map):
@@ -51,8 +55,8 @@ def apply_fuzzy_wuzzy(final, source_columns, destination, final_map):
     for i in dct1.keys():
         xyz = []
         for j, k in enumerate(percent_matching):
-            logging.info("J and K:{} , {}".format(j,k))
-            print("J and K:", j, ",", k)
+            #logging.info("J and K:{} , {}".format(j,k))
+            #print("J and K:", j, ",", k)
             if i == k[1]:
                 xyz.append([j, k[2]])
         xyz.sort(key=lambda x: x[1], reverse=1)
@@ -113,8 +117,6 @@ def map_columns(spark, source_df, target_df, column_percentage, job_type):
 
     logging.info("Check below matching for particular columns")
     print("Check below matching for particular columns")
-    logging.info("Destination_Column", ":", "Source_Column")
-    print("Destination_Column", ":", "Source_Column")
     final = []
     final_map = {}
     apply_fuzzy_wuzzy(final, source_columns, destination, final_map)
@@ -124,12 +126,18 @@ def map_columns(spark, source_df, target_df, column_percentage, job_type):
     flag = True
 
     for i in range(len(source_columns)):
-        print(i, source_columns[i], ":", final[i])
+        print(i, source_columns[i], ":", final[i], ":",final_map.get(final[i]))
+
 
     # if len({i[0] for i in final}) == len({i[1] for i in final}):
     for key, value in final_map.items():
         if int(value) < int(column_percentage):
+            print("User provided percentage:", column_percentage, " Percentage found:", value, " for:",key)
             flag = False
+
+
+
+
     if flag:
         df_auto = change_df_column_name(final, source_df)
         logging.info("Dynamically Modified Source table")
@@ -138,14 +146,35 @@ def map_columns(spark, source_df, target_df, column_percentage, job_type):
         return df_auto
 
     else:
-        logging.info('Need user input for column mapping')
-        print('Need user input for column mapping')
+        print('Using column mapping from provided file column mapping')
         df_auto = change_df_column_name(final, source_df)
         if job_type == "manual":
-            rearranged_df = re_arrange_columns(source_df, df_auto, target_df)
-            return rearranged_df
+            # rearranged_df = re_arrange_columns(source_df, df_auto, target_df)
+            # return rearranged_df
+
+            parent_path = os.path.abspath('')
+            file = parent_path + '\config\mapping.txt'
+            mapping_list = []
+            with open(file, "r") as myfile:
+
+                for line in myfile:
+                    mapping_list.append(line)
+
+            for line in mapping_list:
+                x = line.split(":")
+                source_df = source_df.withColumnRenamed(x[0].strip(), x[1].strip())
+            return source_df
+
+
+
+
         else:
+            logging.info('Need user input for column mapping')
+            print('Need user input for column mapping')
             logging.info("Sending mail and aborting the job")
             print("Sending mail and aborting the job")
-            pass  # Write Logic to send email
+            print("Email: Please rearrange below mapping and run manual job")
+            for i in range(len(source_columns)):
+                print(source_columns[i], ":", final[i])
+            # Write Logic to send email
             exit(0)
