@@ -48,8 +48,8 @@ if __name__ == '__main__':
     target = args.target
     source_db = args.source_db
     target_db = args.target_db
-    source_table = args.source_table
-    target_table = args.target_table
+    source_table = args.source_table.split(',')
+    target_table = args.target_table.split(',')
     id_column = args.id_column
     column_percentage = args.column_percentage
     job_type = args.jobtype
@@ -65,15 +65,19 @@ if __name__ == '__main__':
     jars_string = get_common_jars(parent_path, source, target, config)
     spark = get_spark_session(jars_string)
 
-    source_df = get_df(spark, source, source_db, source_table, config)
-    target_df = get_df(spark, target, target_db, target_table, config)
+    for i in range(len(source_table)):
 
-    if target_df.schema:
-        map_df = map_columns(spark, source_df, target_df, column_percentage, job_type)
-        if "Not Identified" in map_df.columns:
-            map_df = map_df.drop("Not Identified")
-        dtype_df = convert_data_type(map_df, target_df)
-        write_df(spark, target, target_db, target_table, config, map_df, id_column)
-    else:
-        logging.info("Target table doesn't have schema!! Please try with different table or create new table!")
-        print("Target table doesn't have schema!! Please try with different table or create new table!")
+        source_df = get_df(spark, source, source_db, source_table[i], config)
+        target_df = get_df(spark, target, target_db, target_table[i], config)
+
+        if target_df.schema:
+            map_df = map_columns(spark, source_df, target_df, column_percentage, job_type)
+            if "Not Identified" in map_df.columns:
+                map_df = map_df.drop("Not Identified")
+            dtype_df = convert_data_type(map_df, target_df)
+
+            write_df(spark, target, target_db, target_table[i], config, map_df, id_column)
+
+        else:
+            logging.info("Target table doesn't have schema!! Please try with different table or create new table!")
+            print("Target table doesn't have schema!! Please try with different table or create new table!")
