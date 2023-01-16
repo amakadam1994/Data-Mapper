@@ -1,14 +1,11 @@
 class MySqlReader:
     def read(spark, db_name, tbl_name, db_conf):
-        print('tbl_name :', tbl_name)
         tbl_lst = tbl_name.split('&')
-        print('tbl', tbl_lst)
         join_cond = False
         tbls_dict = {}
         if len(tbl_lst) > 1:
             join_cond = True
             tbls_dict = { i.split(':')[0]:i.split(':')[1] for i in tbl_lst }
-        print(tbls_dict)
 
         if join_cond:
             data_frame = ''

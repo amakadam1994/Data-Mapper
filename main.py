@@ -41,6 +41,7 @@ if __name__ == '__main__':
     parser.add_argument("--id_column", help="some useful description.")
     parser.add_argument("--column_percentage", help="some useful description.")
     parser.add_argument("--jobtype", help="manual or auto.")
+    parser.add_argument("--env", help="local or master")
 
     args = parser.parse_args()
 
@@ -53,6 +54,7 @@ if __name__ == '__main__':
     id_column = args.id_column
     column_percentage = args.column_percentage
     job_type = args.jobtype
+    env = args.env
     logging.info(source, " ", source_db, " ", source_table, " ", target, " ", target_db, " ", target_table)
     print(source, " ", source_db, " ", source_table, " ", target, " ", target_db, " ", target_table)
 
@@ -71,7 +73,9 @@ if __name__ == '__main__':
         target_df = get_df(spark, target, target_db, target_table[i], config)
 
         if target_df.schema:
-            map_df = map_columns(spark, source_df, target_df, column_percentage, job_type)
+            email_list = config['EMAIL']
+            map_df = map_columns(spark, source_df, target_df, column_percentage, job_type, source_db,
+                                 source_table[i], target_db, target_table[i], env, email_list)
             if "Not Identified" in map_df.columns:
                 map_df = map_df.drop("Not Identified")
             dtype_df = convert_data_type(map_df, target_df)

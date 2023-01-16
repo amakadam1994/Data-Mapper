@@ -1,6 +1,6 @@
 import logging
 import os
-
+from cryptography.fernet import Fernet
 from fuzzywuzzy import fuzz
 from util.sparkUtils import get_df_columns, get_df_columns_list, change_df_column_name
 
@@ -96,7 +96,8 @@ def re_arrange_columns(source_df, auto_df, target_df):
     return converted_source_df
 
 
-def map_columns(spark, source_df, target_df, column_percentage, job_type):
+def map_columns(spark, source_df, target_df, column_percentage, job_type, source_db,
+                                 source_table, target_db, target_table, env, email_list):
     source_schema = get_df_columns(spark, source_df)
     logging.info("source_columns:", source_schema)
     print("source_columns:", source_schema)
@@ -142,10 +143,13 @@ def map_columns(spark, source_df, target_df, column_percentage, job_type):
         df_auto = change_df_column_name(final, source_df)
         logging.info("Dynamically Modified Source table")
         print("Dynamically Modified Source table")
+        send_email(source_columns, final, source_db, source_table, target_db, target_table, env, email_list)
         df_auto.show()
         return df_auto
 
     else:
+        send_email(source_columns, final, source_db, source_table, target_db, target_table, env, email_list)
+        print('Mail sent')
         print('Using column mapping from provided file column mapping')
         df_auto = change_df_column_name(final, source_df)
         if job_type == "manual":
@@ -165,16 +169,53 @@ def map_columns(spark, source_df, target_df, column_percentage, job_type):
                 source_df = source_df.withColumnRenamed(x[0].strip(), x[1].strip())
             return source_df
 
-
-
-
         else:
             logging.info('Need user input for column mapping')
             print('Need user input for column mapping')
             logging.info("Sending mail and aborting the job")
             print("Sending mail and aborting the job")
             print("Email: Please rearrange below mapping and run manual job")
-            for i in range(len(source_columns)):
-                print(source_columns[i], ":", final[i])
-            # Write Logic to send email
+            send_email(source_columns, final, source_db, source_table, target_db, target_table, env, email_list)
             exit(0)
+
+
+def send_email(source_columns,final, source_db, source_table, target_db, target_table, env, email_list):
+
+    subject = 'Data-Mapper mapping for :{} vs {}'.format(source_table, target_table)
+    content ='The mapping for '+source_table + ' from '+ source_db +' vs '+ target_table + ' from '+ target_db + " \n"
+    for i in range(len(source_columns)):
+        print(source_columns[i], ":", final[i])
+        content = content + source_columns[i] + ":" + final[i] + "\n"
+
+
+    if env == 'local':
+        import smtplib
+        from email.message import EmailMessage
+
+        password= None
+        try:
+            key = email_list['KEY']   # put your key here
+            cipher_suite = Fernet(bytes(key,"UTF-8"))
+            ciphered_text = email_list['PASSWORD']  # put your encrypted password here
+
+            password = cipher_suite.decrypt(bytes(ciphered_text,"UTF-8"))
+            password = password.decode()
+        except Exception as e:
+            print(e)
+
+        msg = EmailMessage()
+        msg['Subject'] = subject
+        msg['From'] = email_list['EMAIL_FROM']
+        msg['To'] = email_list['EMAIL_TO_LIST']
+        msg.set_content(content)
+        server = smtplib.SMTP(host='smtp.gmail.com', port=587)
+        server.ehlo()
+        server.starttls()
+        server.set_debuglevel(1)
+        server.login(email_list['EMAIL_FROM'], password)
+        server.send_message(msg)
+        server.quit()
+        print('successfully sent the mail.')
+    else:
+        pass
+        # Write code for unix mail sender
