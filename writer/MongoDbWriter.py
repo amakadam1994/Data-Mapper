@@ -4,8 +4,8 @@ from util.utils import get_decrypted_password
 
 
 class MongoDbWriter:
-    def write(spark, db_name, tbl_name, db_conf, df, id_column):
-        password = get_decrypted_password('MongoDB', db_conf)
+    def write(spark, db_name, tbl_name, db_conf, df, id_column, common_config):
+        password = get_decrypted_password('MONGODB', db_conf['DB_USER'], common_config)
         from urllib.parse import quote_plus
         username = quote_plus(db_conf['DB_USER'])
         password = quote_plus(password)

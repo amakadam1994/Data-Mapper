@@ -12,22 +12,22 @@ from writer.MongoDbWriter import MongoDbWriter
 
 
 def get_df(spark, DBConnector, databaseName, tableName, config):
-    if DBConnector == "MySql":
-        return MySqlReader.read(spark, databaseName, tableName, config[DBConnector])
-    elif DBConnector == "MongoDB":
-        return MongoDbReader.read(spark, databaseName, tableName, config[DBConnector])
+    if DBConnector == "MYSQL":
+        return MySqlReader.read(spark, databaseName, tableName, config[DBConnector], config['COMMON'])
+    elif DBConnector == "MONGODB":
+        return MongoDbReader.read(spark, databaseName, tableName, config[DBConnector], config['COMMON'])
     else:
         logging.info(f'Does not find reader!! Please create reader for this connector!')
 
 def write_df(spark, DBConnector, databaseName, tableName, config, df, id_column):
-    if DBConnector == "MySql":
-        return MySqlWriter.write(spark, databaseName, tableName, config[DBConnector], df)
-    elif DBConnector == "MongoDB":
-        return MongoDbWriter.write(spark, databaseName, tableName, config[DBConnector], df, id_column)
+    if DBConnector == "MYSQL":
+        return MySqlWriter.write(spark, databaseName, tableName, config[DBConnector], df, config['COMMON'])
+    elif DBConnector == "MONGODB":
+        return MongoDbWriter.write(spark, databaseName, tableName, config[DBConnector], df, id_column, config['COMMON'])
     else:
         logging.info(f'Does not find writer!! Please create writer for this connector!')
 
-# MongoDB, MySql
+# MONGODB, MYSQL
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--source", help="some useful description.")
@@ -44,8 +44,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    source = args.source
-    target = args.target
+    source = args.source.upper()
+    target = args.target.upper()
     source_db = args.source_db
     target_db = args.target_db
     source_table = args.source_table.split(',')
@@ -60,9 +60,11 @@ if __name__ == '__main__':
     file = parent_path + '\config\config.ini'
     config = configparser.ConfigParser()
     config.read(file)
-    env = config['Common']['env']
-    send_email_flag = config['Common']['send_email']
-    load_data = config['Common']['load_data']
+    env = config['COMMON']['ENV']
+    send_email_flag = config['COMMON']['SEND_EMAIL']
+    load_data = config['COMMON']['LOAD_DATA']
+    read_key_from = config['COMMON']['READ_KEY_FROM']
+
 
     jars_string = get_common_jars(parent_path, source, target, config)
     spark = get_spark_session(jars_string)
@@ -75,7 +77,7 @@ if __name__ == '__main__':
             source_columns, final, final_map = map_columns(spark, source_df, target_df)
 
             if send_email_flag.lower() == 'true':
-                send_email(source_columns, final, source_db, source_table[i], target_db, target_table[i], env, config['EMAIL'])
+                send_email(source_columns, final, source_db, source_table[i], target_db, target_table[i], env, config)
 
             if load_data.lower() == 'true':
                 map_df = convert_sourcedf_to_targetdf(source_df, column_percentage, job_type, final, final_map)
