@@ -9,14 +9,14 @@ def get_key(source):
     file = parent_path + '\config\decryption_keys.ini'
     config = configparser.ConfigParser()
     config.read(file)
-    return config[source][source + "_KEY"]
+    return config[source][source + "_KEY"], config[source]["PASSWORD"]
 
 def get_decrypted_password(source, db_conf):
     try:
-        key = get_key(source)
+        key, enc_pass = get_key(source)
         cipher_suite = Fernet(bytes(key, "UTF-8"))
-        ciphered_text = db_conf['PASSWORD']
-        password = cipher_suite.decrypt(bytes(ciphered_text, "UTF-8"))
+        # ciphered_text = db_conf['PASSWORD']
+        password = cipher_suite.decrypt(bytes(enc_pass, "UTF-8"))
         return password.decode()
     except Exception as e:
         logging.error(e)
