@@ -1,5 +1,30 @@
+import configparser
 import logging
+import os
 
+from cryptography.fernet import Fernet
+
+
+def get_key(source):
+    parent_path = os.path.abspath('')
+    file = parent_path + '\config\decryption_keys.ini'
+    print("get_key file path:",file)
+    config = configparser.ConfigParser()
+    config.read(file)
+    return config[source][source+"_KEY"]
+
+
+def get_decrypted_password(source, db_conf):
+    try:
+        key = get_key(source)  # put your key here
+        cipher_suite = Fernet(bytes(key, "UTF-8"))
+        ciphered_text = db_conf['PASSWORD']  # put your encrypted password here
+
+        password = cipher_suite.decrypt(bytes(ciphered_text, "UTF-8"))
+        password = password.decode()
+        return password
+    except Exception as e:
+        print(e)
 
 def get_common_jars(parent_path, source, target, config):
     jars = []

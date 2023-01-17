@@ -2,21 +2,13 @@ import logging
 
 from cryptography.fernet import Fernet
 
+from util.utils import get_decrypted_password
+
 
 class MySqlWriter:
     def write(spark, db_name, tbl_name, db_conf, df):
 
-        password = None
-        try:
-            key = db_conf['KEY']  # put your key here
-            cipher_suite = Fernet(bytes(key, "UTF-8"))
-            ciphered_text = db_conf['DB_PASS']  # put your encrypted password here
-
-            password = cipher_suite.decrypt(bytes(ciphered_text, "UTF-8"))
-            password = password.decode()
-        except Exception as e:
-            print(e)
-
+        password = get_decrypted_password('MySql', db_conf)
 
         df.write.mode("append") \
             .format("jdbc") \

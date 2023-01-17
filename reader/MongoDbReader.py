@@ -4,20 +4,13 @@ from pandas import DataFrame
 from pyspark.sql.types import StructType
 import logging
 
+from util.utils import get_decrypted_password
+
 
 class MongoDbReader:
     def read(spark, db_name, tbl_name, db_conf):
 
-        password = None
-        try:
-            key = db_conf['KEY']  # put your key here
-            cipher_suite = Fernet(bytes(key, "UTF-8"))
-            ciphered_text = db_conf['DB_PASS']  # put your encrypted password here
-
-            password = cipher_suite.decrypt(bytes(ciphered_text, "UTF-8"))
-            password = password.decode()
-        except Exception as e:
-            print(e)
+        password = get_decrypted_password('MongoDB', db_conf)
 
         from urllib.parse import quote_plus
         username = quote_plus(db_conf['DB_USER'])

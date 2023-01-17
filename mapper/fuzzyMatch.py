@@ -3,6 +3,8 @@ import os
 from cryptography.fernet import Fernet
 from fuzzywuzzy import fuzz
 from util.sparkUtils import get_df_columns, get_df_columns_list, change_df_column_name
+from util.utils import get_decrypted_password
+
 
 def trial_fuzzy(element_index, final, source_columns, destination, final_map):
     source_element = source_columns[element_index]
@@ -192,16 +194,7 @@ def send_email(source_columns,final, source_db, source_table, target_db, target_
         import smtplib
         from email.message import EmailMessage
 
-        password= None
-        try:
-            key = email_list['KEY']   # put your key here
-            cipher_suite = Fernet(bytes(key,"UTF-8"))
-            ciphered_text = email_list['PASSWORD']  # put your encrypted password here
-
-            password = cipher_suite.decrypt(bytes(ciphered_text,"UTF-8"))
-            password = password.decode()
-        except Exception as e:
-            print(e)
+        password = get_decrypted_password('EMAIL', email_list)
 
         msg = EmailMessage()
         msg['Subject'] = subject
