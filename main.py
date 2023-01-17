@@ -19,7 +19,6 @@ def get_df(spark, DBConnector, databaseName, tableName, config):
     else:
         print("Does not find reader!! Please create reader for this connector!")
 
-
 def write_df(spark, DBConnector, databaseName, tableName, config, df, id_column):
     if DBConnector == "MySql":
         return MySqlWriter.write(spark, databaseName, tableName, config[DBConnector], df)
@@ -27,7 +26,6 @@ def write_df(spark, DBConnector, databaseName, tableName, config, df, id_column)
         return MongoDbWriter.write(spark, databaseName, tableName, config[DBConnector], df, id_column)
     else:
         print("Does not find writer!! Please create writer for this connector!")
-
 
 # MongoDB, MySql
 if __name__ == '__main__':
@@ -59,7 +57,6 @@ if __name__ == '__main__':
     print(source, " ", source_db, " ", source_table, " ", target, " ", target_db, " ", target_table)
 
     parent_path = os.path.abspath('')
-
     file = parent_path + '\config\config.ini'
     config = configparser.ConfigParser()
     config.read(file)
@@ -68,7 +65,6 @@ if __name__ == '__main__':
     spark = get_spark_session(jars_string)
 
     for i in range(len(source_table)):
-
         source_df = get_df(spark, source, source_db, source_table[i], config)
         target_df = get_df(spark, target, target_db, target_table[i], config)
 
@@ -79,9 +75,7 @@ if __name__ == '__main__':
             if "Not Identified" in map_df.columns:
                 map_df = map_df.drop("Not Identified")
             dtype_df = convert_data_type(map_df, target_df)
-
             write_df(spark, target, target_db, target_table[i], config, map_df, id_column)
-
         else:
             logging.info("Target table doesn't have schema!! Please try with different table or create new table!")
             print("Target table doesn't have schema!! Please try with different table or create new table!")

@@ -1,6 +1,5 @@
 import logging
 import os
-from cryptography.fernet import Fernet
 from fuzzywuzzy import fuzz
 from util.sparkUtils import get_df_columns, get_df_columns_list, change_df_column_name
 from util.utils import get_decrypted_password
@@ -14,7 +13,7 @@ def trial_fuzzy(element_index, final, source_columns, destination, final_map):
         val = fuzz.ratio(source_element.lower(), target_element.lower())
         dest.append(val)
     index = 0
-    p= None
+    p = None
     for j, k in enumerate(dest):
         if destination[j] not in final and j not in ignore_list:
             if k >= index:
@@ -24,7 +23,7 @@ def trial_fuzzy(element_index, final, source_columns, destination, final_map):
                 pass
     if p is not None:
         final[element_index] = destination[p]
-        #final_map[source_columns[element_index]] = index
+        # final_map[source_columns[element_index]] = index
         final_map[destination[p]] = index
 
 
@@ -57,8 +56,8 @@ def apply_fuzzy_wuzzy(final, source_columns, destination, final_map):
     for i in dct1.keys():
         xyz = []
         for j, k in enumerate(percent_matching):
-            #logging.info("J and K:{} , {}".format(j,k))
-            #print("J and K:", j, ",", k)
+            # logging.info("J and K:{} , {}".format(j,k))
+            # print("J and K:", j, ",", k)
             if i == k[1]:
                 xyz.append([j, k[2]])
         xyz.sort(key=lambda x: x[1], reverse=1)
@@ -78,7 +77,6 @@ def re_arrange_columns(source_df, auto_df, target_df):
 
     logging.info("Please check if all columns are mapped correctly or not ")
     print("Please check if all columns are mapped correctly or not ")
-
     ip = input("Y/N")
     while ip == "N":
         logging.info("Which number's column you want to change")
@@ -99,7 +97,7 @@ def re_arrange_columns(source_df, auto_df, target_df):
 
 
 def map_columns(spark, source_df, target_df, column_percentage, job_type, source_db,
-                                 source_table, target_db, target_table, env, email_list):
+                source_table, target_db, target_table, env, email_list):
     source_schema = get_df_columns(spark, source_df)
     logging.info("source_columns:", source_schema)
     print("source_columns:", source_schema)
@@ -108,7 +106,6 @@ def map_columns(spark, source_df, target_df, column_percentage, job_type, source
     logging.info("Source table")
     print("Source table")
     df.show(5)
-
     target_schema = get_df_columns(spark, target_df)
     logging.info("target_columns:", target_schema)
     print("target_columns:", target_schema)
@@ -117,7 +114,6 @@ def map_columns(spark, source_df, target_df, column_percentage, job_type, source
     logging.info("Destination table")
     print("Destination table")
     df_dest.show(5)
-
     logging.info("Check below matching for particular columns")
     print("Check below matching for particular columns")
     final = []
@@ -126,21 +122,15 @@ def map_columns(spark, source_df, target_df, column_percentage, job_type, source
     for element_index, element in enumerate(final):
         if element == "Not Identified":
             trial_fuzzy(element_index, final, source_columns, destination, final_map)
+
     flag = True
-
     for i in range(len(source_columns)):
-        print(i, source_columns[i], ":", final[i], ":",final_map.get(final[i]))
-
-
+        print(i, source_columns[i], ":", final[i], ":", final_map.get(final[i]))
     # if len({i[0] for i in final}) == len({i[1] for i in final}):
     for key, value in final_map.items():
         if int(value) < int(column_percentage):
-            print("User provided percentage:", column_percentage, " Percentage found:", value, " for:",key)
+            print("User provided percentage:", column_percentage, " Percentage found:", value, " for:", key)
             flag = False
-
-
-
-
     if flag:
         df_auto = change_df_column_name(final, source_df)
         logging.info("Dynamically Modified Source table")
@@ -162,10 +152,8 @@ def map_columns(spark, source_df, target_df, column_percentage, job_type, source
             file = parent_path + '\config\mapping.txt'
             mapping_list = []
             with open(file, "r") as myfile:
-
                 for line in myfile:
                     mapping_list.append(line)
-
             for line in mapping_list:
                 x = line.split(":")
                 source_df = source_df.withColumnRenamed(x[0].strip(), x[1].strip())
@@ -181,21 +169,17 @@ def map_columns(spark, source_df, target_df, column_percentage, job_type, source
             exit(0)
 
 
-def send_email(source_columns,final, source_db, source_table, target_db, target_table, env, email_list):
-
+def send_email(source_columns, final, source_db, source_table, target_db, target_table, env, email_list):
     subject = 'Data-Mapper mapping for :{} vs {}'.format(source_table, target_table)
-    content ='The mapping for '+source_table + ' from '+ source_db +' vs '+ target_table + ' from '+ target_db + " \n"
+    content = 'The mapping for ' + source_table + ' from ' + source_db + ' vs ' + target_table + ' from ' + target_db + " \n"
     for i in range(len(source_columns)):
         print(source_columns[i], ":", final[i])
         content = content + source_columns[i] + ":" + final[i] + "\n"
 
-
     if env == 'local':
         import smtplib
         from email.message import EmailMessage
-
         password = get_decrypted_password('EMAIL', email_list)
-
         msg = EmailMessage()
         msg['Subject'] = subject
         msg['From'] = email_list['EMAIL_FROM']

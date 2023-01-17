@@ -1,15 +1,10 @@
 import logging
-
-from cryptography.fernet import Fernet
-
 from util.utils import get_decrypted_password
 
 
 class MySqlWriter:
     def write(spark, db_name, tbl_name, db_conf, df):
-
         password = get_decrypted_password('MySql', db_conf)
-
         df.write.mode("append") \
             .format("jdbc") \
             .option("driver", db_conf['DB_DRIVER']) \
@@ -19,4 +14,3 @@ class MySqlWriter:
             .option("password", password) \
             .save()
         logging.info("Data loaded into MySQL target table:" + db_name + "." + tbl_name)
-        print("Data loaded into MySQL target table:" + db_name + "." + tbl_name)

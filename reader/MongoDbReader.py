@@ -1,17 +1,13 @@
 import pymongo as pymongo
-from cryptography.fernet import Fernet
 from pandas import DataFrame
 from pyspark.sql.types import StructType
 import logging
-
 from util.utils import get_decrypted_password
 
 
 class MongoDbReader:
     def read(spark, db_name, tbl_name, db_conf):
-
         password = get_decrypted_password('MongoDB', db_conf)
-
         from urllib.parse import quote_plus
         username = quote_plus(db_conf['DB_USER'])
         password = quote_plus(password)
