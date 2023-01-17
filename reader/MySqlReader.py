@@ -1,5 +1,20 @@
+from cryptography.fernet import Fernet
+
+
 class MySqlReader:
     def read(spark, db_name, tbl_name, db_conf):
+
+        password = None
+        try:
+            key = db_conf['KEY']  # put your key here
+            cipher_suite = Fernet(bytes(key, "UTF-8"))
+            ciphered_text = db_conf['DB_PASS']  # put your encrypted password here
+
+            password = cipher_suite.decrypt(bytes(ciphered_text, "UTF-8"))
+            password = password.decode()
+        except Exception as e:
+            print(e)
+
         tbl_lst = tbl_name.split('&')
         join_cond = False
         tbls_dict = {}
@@ -17,7 +32,7 @@ class MySqlReader:
                         option("driver", db_conf['DB_DRIVER']). \
                         option("dbtable", tbl_name). \
                         option("user", db_conf['DB_USER']). \
-                        option("password", db_conf['DB_PASS']). \
+                        option("password", password). \
                         load()
                 else:
                     df2 = spark.read. \
@@ -26,7 +41,7 @@ class MySqlReader:
                         option("driver", db_conf['DB_DRIVER']). \
                         option("dbtable", tbl_name). \
                         option("user", db_conf['DB_USER']). \
-                        option("password", db_conf['DB_PASS']). \
+                        option("password", password). \
                         load()
 
                     data_frame = data_frame.join(df2,[join_col], how='inner')
@@ -44,6 +59,6 @@ class MySqlReader:
                 option("driver", db_conf['DB_DRIVER']). \
                 option("dbtable", tbl_name). \
                 option("user", db_conf['DB_USER']). \
-                option("password", db_conf['DB_PASS']). \
+                option("password", password). \
                 load()
             return data_frame
