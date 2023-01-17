@@ -17,7 +17,7 @@ def get_df(spark, DBConnector, databaseName, tableName, config):
     elif DBConnector == "MongoDB":
         return MongoDbReader.read(spark, databaseName, tableName, config[DBConnector])
     else:
-        print("Does not find reader!! Please create reader for this connector!")
+        logging.info(f'Does not find reader!! Please create reader for this connector!')
 
 def write_df(spark, DBConnector, databaseName, tableName, config, df, id_column):
     if DBConnector == "MySql":
@@ -25,7 +25,7 @@ def write_df(spark, DBConnector, databaseName, tableName, config, df, id_column)
     elif DBConnector == "MongoDB":
         return MongoDbWriter.write(spark, databaseName, tableName, config[DBConnector], df, id_column)
     else:
-        print("Does not find writer!! Please create writer for this connector!")
+        logging.info(f'Does not find writer!! Please create writer for this connector!')
 
 # MongoDB, MySql
 if __name__ == '__main__':
@@ -53,8 +53,8 @@ if __name__ == '__main__':
     column_percentage = args.column_percentage
     job_type = args.jobtype
     env = args.env
-    logging.info(source, " ", source_db, " ", source_table, " ", target, " ", target_db, " ", target_table)
-    print(source, " ", source_db, " ", source_table, " ", target, " ", target_db, " ", target_table)
+    logging.info(f' {source} {source_db}  {source_table} {target}  {target_db} {target_table} {column_percentage} {job_type} {env}')
+    # print(source, " ", source_db, " ", source_table, " ", target, " ", target_db, " ", target_table)
 
     parent_path = os.path.abspath('')
     file = parent_path + '\config\config.ini'
@@ -82,5 +82,4 @@ if __name__ == '__main__':
             dtype_df = convert_data_type(map_df, target_df)
             write_df(spark, target, target_db, target_table[i], config, map_df, id_column)
         else:
-            logging.info("Target table doesn't have schema!! Please try with different table or create new table!")
-            print("Target table doesn't have schema!! Please try with different table or create new table!")
+            logging.info(f'Target table does not have schema!! Please try with different table or create new table!')

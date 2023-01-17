@@ -13,4 +13,4 @@ class MySqlWriter:
             .option("user", db_conf['DB_USER']) \
             .option("password", password) \
             .save()
-        logging.info("Data loaded into MySQL target table:" + db_name + "." + tbl_name)
+        logging.info(f'Data loaded into MySQL target table:{db_name}.{tbl_name}')

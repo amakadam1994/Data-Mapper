@@ -22,7 +22,6 @@ class MongoDbReader:
                     df_spark = spark.createDataFrame(df)
                     return df_spark
                 except IndexError as e:
-                    logging.info("There is no data in table so not able to infer the schema")
-                    print("There is no data in table so not able to infer the schema")
+                    logging.info(f'There is no data in table so not able to infer the schema')
                     columns = StructType([])
                     return spark.createDataFrame(data=[], schema=columns)

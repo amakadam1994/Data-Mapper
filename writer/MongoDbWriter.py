@@ -18,4 +18,4 @@ class MongoDbWriter:
             row = row1.to_dict()
             row['_id'] = row[id_column]
             collection.insert_one(row)
-        logging.info("Data loaded into MongoDB target table:" + db_name + "." + tbl_name)
+        logging.info(f'Data loaded into MongoDB target table:{db_name}.{tbl_name}')

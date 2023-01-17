@@ -1,5 +1,4 @@
 import logging
-
 from pyspark.sql import SparkSession
 from pyspark.sql.types import ArrayType, BinaryType, BooleanType, DateType, \
     MapType, NullType, NumericType, StringType, StructType, TimestampType, IntegerType
@@ -52,12 +51,11 @@ def get_datatype_converted_column(df, scolumn, sdata_type, tdata_type, new_colum
             elif str(tdata_type) == "IntegerType":
                 return df.withColumn(new_column, df[scolumn].cast(IntegerType()))
             else:
-                logging.warning("This datatype is not supported please add this data type and try again")
-                print("This datatype is not supported please add this data type and try again")
+                logging.warning(f'This datatype is not supported please add this data type and try again')
                 return df.withColumn(new_column, df[scolumn])
         except Exception as e:
-            logging.error("Data type can not be casted. going ahead with existing data type")
-            print("Data type can not be casted. going ahead with existing data type")
+            logging.error(f'Data type can not be casted. going ahead with existing data type')
+
             return df.withColumn(new_column, df[scolumn])
     else:
         return df.withColumn(new_column, df[scolumn])
@@ -73,9 +71,9 @@ def convert_data_type(source_df, target_df):
                 if sfield.dataType == tfield.dataType:
                     pass
                 else:
-                    logging.info("Found different datatype in target. Converting source datatype to target datatype")
-                    print("Found different datatype in target. Converting source datatype to target datatype. Source:",
-                          sfield.dataType, " Target:", tfield.dataType, " Column Name:", sfield.name)
+                    logging.info(f'Found different datatype in target. Converting source datatype to target datatype. '
+                                 f'Source:{sfield.dataType} Target: {tfield.dataType}  Column Name: {sfield.name}')
+
                     new_column = "new_column"
                     try:
                         source_df1 = get_datatype_converted_column(source_df, sfield.name, sfield.dataType,
@@ -83,8 +81,7 @@ def convert_data_type(source_df, target_df):
                         source_df2 = source_df1.drop(sfield.name).withColumnRenamed(new_column, sfield.name)
                         source_df = source_df2
                     except Exception as e:
-                        logging.warning("Exception while converting data type:", e)
-                        print("Exception while converting data type:", e)
+                        logging.warning(f'Exception while converting data type:{e}')
     return source_df
 
 def change_df_column_name(Final, source_df):
