@@ -55,8 +55,6 @@ def apply_fuzzy_wuzzy(final, source_columns, destination, final_map):
     for i in dct1.keys():
         xyz = []
         for j, k in enumerate(percent_matching):
-            # logging.info("J and K:{} , {}".format(j,k))
-            # print("J and K:", j, ",", k)
             if i == k[1]:
                 xyz.append([j, k[2]])
         xyz.sort(key=lambda x: x[1], reverse=1)
@@ -71,7 +69,6 @@ def re_arrange_columns(source_df, auto_df, target_df):
     given_source = source_df.columns
     for i in range(len(auto_source)):
         logging.info(i, given_source[i], ":", auto_source[i])
-        # print(i, given_source[i], ":", auto_source[i])
 
     logging.info(f'Please check if all columns are mapped correctly or not')
     ip = input("Y/N")
@@ -99,18 +96,14 @@ def map_columns(spark, source_df, target_df, source_db, source_table, target_db,
     source_columns = get_df_columns_list(source_schema)
     df = source_df
     logging.info(f'Source table')
-    # print("Source table")
     df.show(5)
     target_schema = get_df_columns(spark, target_df)
     logging.info(f'target_columns:{target_schema}')
-    # print("target_columns:", target_schema)
     destination = get_df_columns_list(target_schema)
     df_dest = target_df
     logging.info(f'Target table')
-    # print("Target table")
     df_dest.show(5)
     logging.info(f'Check below matching for each column')
-    # print("Check below matching for each column")
     final = []
     final_map = {}
     apply_fuzzy_wuzzy(final, source_columns, destination, final_map)
@@ -120,7 +113,6 @@ def map_columns(spark, source_df, target_df, source_db, source_table, target_db,
 
     for i in range(len(source_columns)):
         logging.info(f'{i} {source_columns[i]} :  {final[i]} : {final_map.get(final[i])}')
-        # print(i, source_columns[i], ":", final[i], ":", final_map.get(final[i]))
 
     send_email(source_columns, final, source_db, source_table, target_db, target_table, env, email_list)
 
@@ -169,7 +161,6 @@ def send_email(source_columns, final, source_db, source_table, target_db, target
     content = 'The mapping for ' + source_table + ' from ' + source_db + ' vs ' + target_table + ' from ' + target_db + " \n\n"
     file_content= ''
     for i in range(len(source_columns)):
-        # print(source_columns[i], ":", final[i])
         logging.info(f'{source_columns[i]} : {final[i]}')
         content = content + source_columns[i] + ":" + final[i] + "\n"
         file_content = file_content + source_columns[i] + ":" + final[i] + "\n"

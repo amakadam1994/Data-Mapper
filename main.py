@@ -41,6 +41,8 @@ if __name__ == '__main__':
     parser.add_argument("--jobtype", help="manual or auto.")
     parser.add_argument("--env", help="local or master")
 
+    logging.getLogger().setLevel(logging.INFO)
+
     args = parser.parse_args()
 
     source = args.source
@@ -54,7 +56,6 @@ if __name__ == '__main__':
     job_type = args.jobtype
     env = args.env
     logging.info(f' {source} {source_db}  {source_table} {target}  {target_db} {target_table} {column_percentage} {job_type} {env}')
-    # print(source, " ", source_db, " ", source_table, " ", target, " ", target_db, " ", target_table)
 
     parent_path = os.path.abspath('')
     file = parent_path + '\config\config.ini'
