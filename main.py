@@ -3,7 +3,7 @@ import argparse
 import logging
 import configparser
 from util.utils import get_common_jars
-from mapper.fuzzyMatch import map_columns
+from mapper.fuzzyMatch import map_columns, convert_sourcedf_to_targetdf
 from reader.MySqlReader import MySqlReader
 from writer.MySqlWriter import MySqlWriter
 from util.sparkUtils import get_spark_session, convert_data_type
@@ -70,8 +70,13 @@ if __name__ == '__main__':
 
         if target_df.schema:
             email_list = config['EMAIL']
-            map_df = map_columns(spark, source_df, target_df, column_percentage, job_type, source_db,
+            # map_df = map_columns(spark, source_df, target_df, column_percentage, job_type, source_db,
+            #                      source_table[i], target_db, target_table[i], env, email_list)
+
+            source_columns, final, final_map = map_columns(spark, source_df, target_df, source_db,
                                  source_table[i], target_db, target_table[i], env, email_list)
+
+            map_df = convert_sourcedf_to_targetdf(source_df, column_percentage, job_type, final, final_map)
             if "Not Identified" in map_df.columns:
                 map_df = map_df.drop("Not Identified")
             dtype_df = convert_data_type(map_df, target_df)

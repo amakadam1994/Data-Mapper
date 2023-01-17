@@ -96,8 +96,7 @@ def re_arrange_columns(source_df, auto_df, target_df):
     return converted_source_df
 
 
-def map_columns(spark, source_df, target_df, column_percentage, job_type, source_db,
-                source_table, target_db, target_table, env, email_list):
+def map_columns(spark, source_df, target_df, source_db, source_table, target_db, target_table, env, email_list):
     source_schema = get_df_columns(spark, source_df)
     logging.info("source_columns:", source_schema)
     print("source_columns:", source_schema)
@@ -111,11 +110,11 @@ def map_columns(spark, source_df, target_df, column_percentage, job_type, source
     print("target_columns:", target_schema)
     destination = get_df_columns_list(target_schema)
     df_dest = target_df
-    logging.info("Destination table")
-    print("Destination table")
+    logging.info("Target table")
+    print("Target table")
     df_dest.show(5)
-    logging.info("Check below matching for particular columns")
-    print("Check below matching for particular columns")
+    logging.info("Check below matching for each column")
+    print("Check below matching for each column")
     final = []
     final_map = {}
     apply_fuzzy_wuzzy(final, source_columns, destination, final_map)
@@ -123,9 +122,17 @@ def map_columns(spark, source_df, target_df, column_percentage, job_type, source
         if element == "Not Identified":
             trial_fuzzy(element_index, final, source_columns, destination, final_map)
 
-    flag = True
     for i in range(len(source_columns)):
         print(i, source_columns[i], ":", final[i], ":", final_map.get(final[i]))
+
+    send_email(source_columns, final, source_db, source_table, target_db, target_table, env, email_list)
+
+    return source_columns, final, final_map
+
+
+def convert_sourcedf_to_targetdf(source_df, column_percentage, job_type, final, final_map):
+
+    flag = True
     # if len({i[0] for i in final}) == len({i[1] for i in final}):
     for key, value in final_map.items():
         if int(value) < int(column_percentage):
@@ -135,15 +142,11 @@ def map_columns(spark, source_df, target_df, column_percentage, job_type, source
         df_auto = change_df_column_name(final, source_df)
         logging.info("Dynamically Modified Source table")
         print("Dynamically Modified Source table")
-        send_email(source_columns, final, source_db, source_table, target_db, target_table, env, email_list)
         df_auto.show()
         return df_auto
 
     else:
-        send_email(source_columns, final, source_db, source_table, target_db, target_table, env, email_list)
-        print('Mail sent')
         print('Using column mapping from provided file column mapping')
-        df_auto = change_df_column_name(final, source_df)
         if job_type == "manual":
             # rearranged_df = re_arrange_columns(source_df, df_auto, target_df)
             # return rearranged_df
@@ -164,17 +167,17 @@ def map_columns(spark, source_df, target_df, column_percentage, job_type, source
             print('Need user input for column mapping')
             logging.info("Sending mail and aborting the job")
             print("Sending mail and aborting the job")
-            print("Email: Please rearrange below mapping and run manual job")
-            send_email(source_columns, final, source_db, source_table, target_db, target_table, env, email_list)
             exit(0)
 
 
 def send_email(source_columns, final, source_db, source_table, target_db, target_table, env, email_list):
     subject = 'Data-Mapper mapping for :{} vs {}'.format(source_table, target_table)
-    content = 'The mapping for ' + source_table + ' from ' + source_db + ' vs ' + target_table + ' from ' + target_db + " \n"
+    content = 'The mapping for ' + source_table + ' from ' + source_db + ' vs ' + target_table + ' from ' + target_db + " \n\n"
+    file_content= ''
     for i in range(len(source_columns)):
         print(source_columns[i], ":", final[i])
         content = content + source_columns[i] + ":" + final[i] + "\n"
+        file_content = file_content + source_columns[i] + ":" + final[i] + "\n"
 
     if env == 'local':
         import smtplib
