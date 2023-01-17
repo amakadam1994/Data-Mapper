@@ -50,3 +50,33 @@ def get_common_jars(parent_path, source, target, config):
                 jars.append(jar_path)
 
     return ','.join(map(str, jars))
+
+def send_email(source_columns, final, source_db, source_table, target_db, target_table, env, email_list):
+    subject = 'Data-Mapper mapping for :{} vs {}'.format(source_table, target_table)
+    content = 'The mapping for ' + source_table + ' from ' + source_db + ' vs ' + target_table + ' from ' + target_db + " \n\n"
+    file_content= ''
+    for i in range(len(source_columns)):
+        logging.info(f'{source_columns[i]} : {final[i]}')
+        content = content + source_columns[i] + ":" + final[i] + "\n"
+        file_content = file_content + source_columns[i] + ":" + final[i] + "\n"
+
+    if env == 'local':
+        import smtplib
+        from email.message import EmailMessage
+        password = get_decrypted_password('EMAIL', email_list)
+        msg = EmailMessage()
+        msg['Subject'] = subject
+        msg['From'] = email_list['EMAIL_FROM']
+        msg['To'] = email_list['EMAIL_TO_LIST']
+        msg.set_content(content)
+        server = smtplib.SMTP(host='smtp.gmail.com', port=587)
+        server.ehlo()
+        server.starttls()
+        server.set_debuglevel(1)
+        server.login(email_list['EMAIL_FROM'], password)
+        server.send_message(msg)
+        server.quit()
+        logging.info(f'successfully sent the mail.')
+    else:
+        pass
+        # Write code for unix mail sender
