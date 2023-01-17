@@ -3,10 +3,10 @@ import argparse
 import logging
 import configparser
 from util.utils import get_common_jars, send_email
-from mapper.fuzzyMatch import map_columns, convert_sourcedf_to_targetdf
+from mapper.fuzzyMatch import map_columns
 from reader.MySqlReader import MySqlReader
 from writer.MySqlWriter import MySqlWriter
-from util.sparkUtils import get_spark_session, convert_data_type
+from util.sparkUtils import get_spark_session, convert_data_type, convert_sourcedf_to_targetdf
 from reader.MongoDbReader import MongoDbReader
 from writer.MongoDbWriter import MongoDbWriter
 
@@ -39,8 +39,6 @@ if __name__ == '__main__':
     parser.add_argument("--id_column", help="some useful description.")
     parser.add_argument("--column_percentage", help="some useful description.")
     parser.add_argument("--jobtype", help="manual or auto.")
-
-
 
     logging.getLogger().setLevel(logging.INFO)
 

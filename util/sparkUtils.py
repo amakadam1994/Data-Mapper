@@ -1,4 +1,6 @@
 import logging
+import os
+
 from pyspark.sql import SparkSession
 from pyspark.sql.types import ArrayType, BinaryType, BooleanType, DateType, \
     MapType, NullType, NumericType, StringType, StructType, TimestampType, IntegerType
@@ -87,3 +89,41 @@ def convert_data_type(source_df, target_df):
 def change_df_column_name(Final, source_df):
     df = source_df.rdd.toDF(Final)
     return df
+
+
+
+def convert_sourcedf_to_targetdf(source_df, column_percentage, job_type, final, final_map):
+
+    flag = True
+    # if len({i[0] for i in final}) == len({i[1] for i in final}):
+    for key, value in final_map.items():
+        if int(value) < int(column_percentage):
+            logging.info(f'User provided percentage:{column_percentage} Percentage found:{value} for:{key}')
+            flag = False
+    if flag:
+        df_auto = change_df_column_name(final, source_df)
+        logging.info(f'Dynamically Modified Source table')
+        df_auto.show()
+        return df_auto
+
+    else:
+        logging.info(f'Using column mapping from provided file column mapping')
+        if job_type == "manual":
+            # rearranged_df = re_arrange_columns(source_df, df_auto, target_df)
+            # return rearranged_df
+
+            parent_path = os.path.abspath('')
+            file = parent_path + '\config\mapping.txt'
+            mapping_list = []
+            with open(file, "r") as myfile:
+                for line in myfile:
+                    mapping_list.append(line)
+            for line in mapping_list:
+                x = line.split(":")
+                source_df = source_df.withColumnRenamed(x[0].strip(), x[1].strip())
+            return source_df
+
+        else:
+            logging.info(f'Need user input for column mapping')
+            logging.info(f'Sending mail and aborting the job')
+            exit(0)
