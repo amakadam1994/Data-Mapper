@@ -2,30 +2,11 @@ import os
 import argparse
 import logging
 import configparser
+from util.getReaderWriter import read_df, write_df
 from util.utils import get_common_jars, send_email
 from mapper.fuzzyMatch import map_df_columns
-from reader.MySqlReader import MySqlReader
-from writer.MySqlWriter import MySqlWriter
 from util.sparkUtils import get_spark_session, convert_data_type, convert_sourcedf_to_targetdf
-from reader.MongoDbReader import MongoDbReader
-from writer.MongoDbWriter import MongoDbWriter
 
-
-def get_df(spark, DBConnector, databaseName, tableName, config):
-    if DBConnector == "MYSQL":
-        return MySqlReader.read(spark, databaseName, tableName, config[DBConnector], config['COMMON'])
-    elif DBConnector == "MONGODB":
-        return MongoDbReader.read(spark, databaseName, tableName, config[DBConnector], config['COMMON'])
-    else:
-        logging.info(f'Does not find reader!! Please create reader for this connector!')
-
-def write_df(spark, DBConnector, databaseName, tableName, config, df, id_column):
-    if DBConnector == "MYSQL":
-        return MySqlWriter.write(spark, databaseName, tableName, config[DBConnector], df, config['COMMON'])
-    elif DBConnector == "MONGODB":
-        return MongoDbWriter.write(spark, databaseName, tableName, config[DBConnector], df, id_column, config['COMMON'])
-    else:
-        logging.info(f'Does not find writer!! Please create writer for this connector!')
 
 # MONGODB, MYSQL
 if __name__ == '__main__':
@@ -66,8 +47,8 @@ if __name__ == '__main__':
     spark = get_spark_session(jars_string, env)
 
     for i in range(len(source_table)):
-        source_df = get_df(spark, source, source_db, source_table[i], config)
-        target_df = get_df(spark, target, target_db, target_table[i], config)
+        source_df = read_df(spark, source, source_db, source_table[i], config)
+        target_df = read_df(spark, target, target_db, target_table[i], config)
 
         if target_df.schema:
             source_columns, final, final_map = map_df_columns(spark, source_df, target_df)
