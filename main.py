@@ -58,11 +58,13 @@ if __name__ == '__main__':
 
             if load_data.lower() == 'true':
                 map_df = convert_sourcedf_to_targetdf(source_df, column_percentage, job_type, final, final_map)
-                map_df.show(5)
 
                 if "Not Identified" in map_df.columns:
                     map_df = map_df.drop("Not Identified")
+
                 dtype_df = convert_data_type(map_df, target_df)
+
+                map_df.show(5)
                 write_df(spark, target, target_db, target_table[i], config, map_df, id_column)
         else:
             logging.info(f'Target table does not have schema!! Please try with different table or create new table!')
