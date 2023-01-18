@@ -15,34 +15,21 @@ class MySqlReader:
             data_frame = ''
             for tbl_name, join_col in tbls_dict.items():
                 if not data_frame:
-                    data_frame = spark.read. \
-                        format("jdbc"). \
-                        option("url", db_conf['URL'] + db_name). \
-                        option("driver", db_conf['DB_DRIVER']). \
-                        option("dbtable", tbl_name). \
-                        option("user", db_conf['DB_USER']). \
-                        option("password", password). \
-                        load()
+                    data_frame = read_df(spark, db_conf, db_name, tbl_name, password)
                 else:
-                    df2 = spark.read. \
-                        format("jdbc"). \
-                        option("url", db_conf['URL'] + db_name). \
-                        option("driver", db_conf['DB_DRIVER']). \
-                        option("dbtable", tbl_name). \
-                        option("user", db_conf['DB_USER']). \
-                        option("password", password). \
-                        load()
-
+                    df2 = read_df(spark, db_conf, db_name, tbl_name, password)
                     data_frame = data_frame.join(df2, [join_col], how='inner')
             return data_frame
-
         else:
-            data_frame = spark.read. \
-                format("jdbc"). \
-                option("url", db_conf['URL'] + db_name). \
-                option("driver", db_conf['DB_DRIVER']). \
-                option("dbtable", tbl_name). \
-                option("user", db_conf['DB_USER']). \
-                option("password", password). \
-                load()
-            return data_frame
+            return read_df(spark, db_conf, db_name, tbl_name, password)
+
+def read_df(spark, db_conf, db_name, tbl_name, password):
+    data_frame = spark.read. \
+        format("jdbc"). \
+        option("url", db_conf['URL'] + db_name). \
+        option("driver", db_conf['DB_DRIVER']). \
+        option("dbtable", tbl_name). \
+        option("user", db_conf['DB_USER']). \
+        option("password", password). \
+        load()
+    return data_frame
