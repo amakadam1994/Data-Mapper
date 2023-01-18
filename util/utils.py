@@ -77,22 +77,30 @@ def send_email(source_columns, final, source_db, source_table, target_db, target
         file_content = file_content + source_columns[i] + ":" + final[i] + "\n"
 
     if env == 'local':
-        import smtplib
-        from email.message import EmailMessage
-        password = get_decrypted_password('EMAIL', config['EMAIL']['EMAIL_FROM'], config['COMMON'])
-        msg = EmailMessage()
-        msg['Subject'] = subject
-        msg['From'] = config['EMAIL']['EMAIL_FROM']
-        msg['To'] = config['EMAIL']['EMAIL_TO_LIST']
-        msg.set_content(content)
-        server = smtplib.SMTP(host='smtp.gmail.com', port=587)
-        server.ehlo()
-        server.starttls()
-        server.set_debuglevel(1)
-        server.login(config['EMAIL']['EMAIL_FROM'], password)
-        server.send_message(msg)
-        server.quit()
-        logging.info(f'successfully sent the mail.')
+        smtp_mail(config, subject, content)
     else:
-        pass
-        # Write code for unix mail sender
+        unix_mail()
+
+
+
+def smtp_mail(config, subject, content):
+    import smtplib
+    from email.message import EmailMessage
+    password = get_decrypted_password('EMAIL', config['EMAIL']['EMAIL_FROM'], config['COMMON'])
+    msg = EmailMessage()
+    msg['Subject'] = subject
+    msg['From'] = config['EMAIL']['EMAIL_FROM']
+    msg['To'] = config['EMAIL']['EMAIL_TO_LIST']
+    msg.set_content(content)
+    server = smtplib.SMTP(host='smtp.gmail.com', port=587)
+    server.ehlo()
+    server.starttls()
+    server.set_debuglevel(1)
+    server.login(config['EMAIL']['EMAIL_FROM'], password)
+    server.send_message(msg)
+    server.quit()
+    logging.info(f'successfully sent the mail.')
+
+def unix_mail():
+    pass
+    # Write code for unix mail sender
