@@ -76,7 +76,6 @@ def send_email(source_columns, final, source_db, source_table, target_db, target
         unix_mail()
 
 
-
 def smtp_mail(config, subject, content):
     import smtplib
     from email.message import EmailMessage

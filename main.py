@@ -3,7 +3,7 @@ import argparse
 import logging
 import configparser
 from util.utils import get_common_jars, send_email
-from mapper.fuzzyMatch import map_columns
+from mapper.fuzzyMatch import map_df_columns
 from reader.MySqlReader import MySqlReader
 from writer.MySqlWriter import MySqlWriter
 from util.sparkUtils import get_spark_session, convert_data_type, convert_sourcedf_to_targetdf
@@ -74,7 +74,7 @@ if __name__ == '__main__':
         target_df = get_df(spark, target, target_db, target_table[i], config)
 
         if target_df.schema:
-            source_columns, final, final_map = map_columns(spark, source_df, target_df)
+            source_columns, final, final_map = map_df_columns(spark, source_df, target_df)
 
             if send_email_flag.lower() == 'true':
                 send_email(source_columns, final, source_db, source_table[i], target_db, target_table[i], env, config)

@@ -3,33 +3,33 @@ from fuzzywuzzy import fuzz
 from util.sparkUtils import get_df_columns, get_df_columns_list
 
 
-def trial_fuzzy(element_index, final, source_columns, destination, final_map):
+def trial_fuzzy(element_index, final, source_columns, target_columns, final_map):
     source_element = source_columns[element_index]
     ignore_list = []
     dest = []
-    for m, target_element in enumerate(destination):
+    for m, target_element in enumerate(target_columns):
         val = fuzz.ratio(source_element.lower(), target_element.lower())
         dest.append(val)
     index = 0
     p = None
     for j, k in enumerate(dest):
-        if destination[j] not in final and j not in ignore_list:
+        if target_columns[j] not in final and j not in ignore_list:
             if k >= index:
                 index = k
                 p = j
             else:
                 pass
     if p is not None:
-        final[element_index] = destination[p]
-        final_map[destination[p]] = index
+        final[element_index] = target_columns[p]
+        final_map[target_columns[p]] = index
 
 
-def apply_fuzzy_wuzzy(final, source_columns, destination, final_map):
+def apply_fuzzy_wuzzy(final, source_columns, target_columns, final_map):
     ignore_list = []
     percent_matching = []
     for i in source_columns:
         dest = []
-        for m, n in enumerate(destination):
+        for m, n in enumerate(target_columns):
             val = fuzz.ratio(i.lower(), n.lower())
             dest.append(val)  # j-index k-value(%)
         o = 0
@@ -40,7 +40,7 @@ def apply_fuzzy_wuzzy(final, source_columns, destination, final_map):
                     p = j
                 else:
                     pass
-        percent_matching.append([destination[p], p, o])
+        percent_matching.append([target_columns[p], p, o])
     logging.info(f'percent_matching:{percent_matching}')
     for i in percent_matching:
         final.append(i[0])
@@ -87,27 +87,33 @@ def re_arrange_columns(source_df, auto_df, target_df):
     return converted_source_df
 
 
-def map_columns(spark, source_df, target_df):
+def map_df_columns(spark, source_df, target_df):
     source_schema = get_df_columns(spark, source_df)
     logging.info(f'source_columns:{source_schema}')
     source_columns = get_df_columns_list(source_schema)
     df = source_df
     logging.info(f'Source table')
     df.show(5)
+
     target_schema = get_df_columns(spark, target_df)
     logging.info(f'target_columns:{target_schema}')
-    destination = get_df_columns_list(target_schema)
+    target_columns = get_df_columns_list(target_schema)
     df_dest = target_df
     logging.info(f'Target table')
     df_dest.show(5)
-    logging.info(f'Check below matching for each column')
+
+    return map_columns(source_columns, target_columns)
+
+
+def map_columns(source_columns, target_columns):
     final = []
     final_map = {}
-    apply_fuzzy_wuzzy(final, source_columns, destination, final_map)
+    apply_fuzzy_wuzzy(final, source_columns, target_columns, final_map)
     for element_index, element in enumerate(final):
         if element == "Not Identified":
-            trial_fuzzy(element_index, final, source_columns, destination, final_map)
+            trial_fuzzy(element_index, final, source_columns, target_columns, final_map)
 
+    logging.info(f'Check below matching for each column')
     for i in range(len(source_columns)):
         logging.info(f'{i} {source_columns[i]} :  {final[i]} : {final_map.get(final[i])}')
 

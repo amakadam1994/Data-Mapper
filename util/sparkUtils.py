@@ -109,10 +109,10 @@ def convert_sourcedf_to_targetdf(source_df, column_percentage, job_type, final, 
         return change_df_column_name(final, source_df)
     else:
         logging.info(f'Using column mapping from provided file column mapping')
-        return convert_df_manually(job_type)
+        return convert_df_manually(job_type, source_df)
 
 
-def convert_df_manually(job_type):
+def convert_df_manually(job_type, source_df):
     if job_type == "manual":
         # rearranged_df = re_arrange_columns(source_df, df_auto, target_df)
         # return rearranged_df
