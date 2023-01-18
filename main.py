@@ -30,33 +30,29 @@ def write_df(spark, DBConnector, databaseName, tableName, config, df, id_column)
 # MONGODB, MYSQL
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--source", help="some useful description.")
-    parser.add_argument("--target", help="some useful description.")
-    parser.add_argument("--source_db", help="some useful description.")
-    parser.add_argument("--target_db", help="some useful description.")
-    parser.add_argument("--source_table", help="some useful description.")
-    parser.add_argument("--target_table", help="some useful description.")
-    parser.add_argument("--id_column", help="some useful description.")
-    parser.add_argument("--column_percentage", help="some useful description.")
-    parser.add_argument("--jobtype", help="manual or auto.")
-
+    parser.add_argument("--param_file", help="some useful description.")
     logging.getLogger().setLevel(logging.INFO)
 
     args = parser.parse_args()
 
-    source = args.source.upper()
-    target = args.target.upper()
-    source_db = args.source_db
-    target_db = args.target_db
-    source_table = args.source_table.split(',')
-    target_table = args.target_table.split(',')
-    id_column = args.id_column
-    column_percentage = args.column_percentage
-    job_type = args.jobtype
+    parent_path = os.path.abspath('')
+    param_file = args.param_file
+    param_config = configparser.ConfigParser()
+    param_config.read(parent_path+param_file)
 
+    param_config= param_config['PARAMETERS']
+    source = param_config["source"].upper()
+    target = param_config["target"].upper()
+    source_db = param_config["source_db"]
+    target_db = param_config["target_db"]
+    source_table = param_config["source_table"].split(',')
+    target_table = param_config["target_table"].split(',')
+    id_column = param_config["id_column"]
+    column_percentage = param_config["column_percentage"]
+    job_type = param_config["job_type"]
     logging.info(f' {source} {source_db}  {source_table} {target}  {target_db} {target_table} {column_percentage} {job_type}')
 
-    parent_path = os.path.abspath('')
+
     file = parent_path + '\config\config.ini'
     config = configparser.ConfigParser()
     config.read(file)
