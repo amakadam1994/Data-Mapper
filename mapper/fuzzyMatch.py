@@ -1,8 +1,6 @@
 import logging
-import os
 from fuzzywuzzy import fuzz
-from util.sparkUtils import get_df_columns, get_df_columns_list, change_df_column_name
-from util.utils import get_decrypted_password
+from util.sparkUtils import get_df_columns, get_df_columns_list
 
 
 def trial_fuzzy(element_index, final, source_columns, destination, final_map):
@@ -23,7 +21,6 @@ def trial_fuzzy(element_index, final, source_columns, destination, final_map):
                 pass
     if p is not None:
         final[element_index] = destination[p]
-        # final_map[source_columns[element_index]] = index
         final_map[destination[p]] = index
 
 

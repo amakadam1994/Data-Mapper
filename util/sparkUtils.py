@@ -6,7 +6,14 @@ from pyspark.sql.types import ArrayType, BinaryType, BooleanType, DateType, \
     MapType, NullType, NumericType, StringType, StructType, TimestampType, IntegerType
 
 
-def get_spark_session(jars):
+def get_spark_session(jars, env):
+    if env.lower() == 'local':
+        return local_spark_session(jars)
+    else:
+        pass
+        # Write code to create the spark session on hadoop platform with master
+
+def local_spark_session(jars):
     if jars is None:
         return SparkSession \
             .master("local") \
@@ -19,7 +26,6 @@ def get_spark_session(jars):
             .appName("DataMapper") \
             .getOrCreate()
 
-
 def get_df_columns(spark, df):
     schema = [i for i in df.schema]
     return schema
@@ -31,8 +37,7 @@ def get_df_columns_list(schema):
         column_list.append(field.name)
     return column_list
 
-
-def get_datatype_converted_column(df, scolumn, sdata_type, tdata_type, new_column):
+def check_supported_pairs(sdata_type, tdata_type):
     supported_pairs = [
         ["IntegerType", "StringType"], ["StringType", "DateType"], ["StringType", "BooleanType"]
     ]
@@ -42,6 +47,10 @@ def get_datatype_converted_column(df, scolumn, sdata_type, tdata_type, new_colum
             flag = True
         else:
             pass
+    return flag
+
+def get_datatype_converted_column(df, scolumn, sdata_type, tdata_type, new_column):
+    flag = check_supported_pairs(sdata_type, tdata_type)
     if flag:
         try:
             if str(tdata_type) == "StringType":
@@ -57,7 +66,6 @@ def get_datatype_converted_column(df, scolumn, sdata_type, tdata_type, new_colum
                 return df.withColumn(new_column, df[scolumn])
         except Exception as e:
             logging.error(f'Data type can not be casted. going ahead with existing data type')
-
             return df.withColumn(new_column, df[scolumn])
     else:
         return df.withColumn(new_column, df[scolumn])
@@ -70,9 +78,7 @@ def convert_data_type(source_df, target_df):
     for sfield in source_schema:
         for tfield in target_schema:
             if sfield.name == tfield.name:
-                if sfield.dataType == tfield.dataType:
-                    pass
-                else:
+                if sfield.dataType != tfield.dataType:
                     logging.info(f'Found different datatype in target. Converting source datatype to target datatype. '
                                  f'Source:{sfield.dataType} Target: {tfield.dataType}  Column Name: {sfield.name}')
 
@@ -91,9 +97,7 @@ def change_df_column_name(Final, source_df):
     return df
 
 
-
 def convert_sourcedf_to_targetdf(source_df, column_percentage, job_type, final, final_map):
-
     flag = True
     # if len({i[0] for i in final}) == len({i[1] for i in final}):
     for key, value in final_map.items():
@@ -101,29 +105,32 @@ def convert_sourcedf_to_targetdf(source_df, column_percentage, job_type, final, 
             logging.info(f'User provided percentage:{column_percentage} Percentage found:{value} for:{key}')
             flag = False
     if flag:
-        df_auto = change_df_column_name(final, source_df)
         logging.info(f'Dynamically Modified Source table')
-        df_auto.show()
-        return df_auto
-
+        return change_df_column_name(final, source_df)
     else:
         logging.info(f'Using column mapping from provided file column mapping')
-        if job_type == "manual":
-            # rearranged_df = re_arrange_columns(source_df, df_auto, target_df)
-            # return rearranged_df
+        return convert_df_manually(job_type)
 
-            parent_path = os.path.abspath('')
-            file = parent_path + '\config\mapping.txt'
-            mapping_list = []
-            with open(file, "r") as myfile:
-                for line in myfile:
-                    mapping_list.append(line)
-            for line in mapping_list:
-                x = line.split(":")
-                source_df = source_df.withColumnRenamed(x[0].strip(), x[1].strip())
-            return source_df
 
-        else:
-            logging.info(f'Need user input for column mapping')
-            logging.info(f'Sending mail and aborting the job')
-            exit(0)
+def convert_df_manually(job_type):
+    if job_type == "manual":
+        # rearranged_df = re_arrange_columns(source_df, df_auto, target_df)
+        # return rearranged_df
+
+        mapping_list = []
+        read_mapping_text(mapping_list)
+        for line in mapping_list:
+            x = line.split(":")
+            source_df = source_df.withColumnRenamed(x[0].strip(), x[1].strip())
+        return source_df
+    else:
+        logging.info(f'Need user input for column mapping')
+        logging.info(f'Sending mail and aborting the job')
+        exit(0)
+
+def read_mapping_text(mapping_list):
+    parent_path = os.path.abspath('')
+    file = parent_path + '\config\mapping.txt'
+    with open(file, "r") as myfile:
+        for line in myfile:
+            mapping_list.append(line)

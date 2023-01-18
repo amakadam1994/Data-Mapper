@@ -67,7 +67,7 @@ if __name__ == '__main__':
 
 
     jars_string = get_common_jars(parent_path, source, target, config)
-    spark = get_spark_session(jars_string)
+    spark = get_spark_session(jars_string, env)
 
     for i in range(len(source_table)):
         source_df = get_df(spark, source, source_db, source_table[i], config)
@@ -81,6 +81,7 @@ if __name__ == '__main__':
 
             if load_data.lower() == 'true':
                 map_df = convert_sourcedf_to_targetdf(source_df, column_percentage, job_type, final, final_map)
+                map_df.show(5)
 
                 if "Not Identified" in map_df.columns:
                     map_df = map_df.drop("Not Identified")
