@@ -1,9 +1,8 @@
 import os
 import pytest
-from util.utils import send_email
-from util.utils import get_common_jars
-from util.utils import get_decrypted_password
-from util.utils import get_key_from_file
+from main.util.utils import send_email
+from main.util.utils import get_common_jars
+from main.util.utils import get_decrypted_password
 
 config = {
         'MYSQL': {

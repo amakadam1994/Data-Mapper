@@ -2,7 +2,7 @@ import json
 
 import pymysql
 from app import app
-from config import mysql
+from KeyMakerAPI.config import mysql
 from flask import jsonify
 from flask import flash, request
 

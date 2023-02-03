@@ -1,5 +1,4 @@
 import logging
-
 from reader.MongoDbReader import MongoDbReader
 from writer.MongoDbWriter import MongoDbWriter
 from reader.MySqlReader import MySqlReader
