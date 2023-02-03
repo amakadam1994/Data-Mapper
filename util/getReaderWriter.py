@@ -5,11 +5,11 @@ from writer.MongoDbWriter import MongoDbWriter
 from reader.MySqlReader import MySqlReader
 from writer.MySqlWriter import MySqlWriter
 
-def read_df(spark, DBConnector, databaseName, tableName, config):
+def read_df(spark, DBConnector, databaseName, tableName, config, exist_check_flag):
     if DBConnector == "MYSQL":
-        return MySqlReader.read(spark, databaseName, tableName, config[DBConnector], config['COMMON'])
+        return MySqlReader.read(spark, databaseName, tableName, config[DBConnector], config['COMMON'], exist_check_flag)
     elif DBConnector == "MONGODB":
-        return MongoDbReader.read(spark, databaseName, tableName, config[DBConnector], config['COMMON'])
+        return MongoDbReader.read(spark, databaseName, tableName, config[DBConnector], config['COMMON'], exist_check_flag)
     else:
         logging.info(f'Does not find reader!! Please create reader for this connector!')
 

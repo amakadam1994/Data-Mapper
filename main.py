@@ -43,18 +43,25 @@ if __name__ == '__main__':
     read_key_from = config['COMMON']['READ_KEY_FROM']
 
 
+    create_table_if_not_exist = config['COMMON']['CREATE_TABLE_IF_NOT_EXIST']
+
+    source_table_check= False
+    target_table_check= False
+    if create_table_if_not_exist.lower() == 'true' or create_table_if_not_exist.lower() == 'yes':
+        target_table_check = True
+
     jars_string = get_common_jars(parent_path, source, target, config)
     spark = get_spark_session(jars_string, env)
 
     for i in range(len(source_table)):
-        source_df = read_df(spark, source, source_db, source_table[i], config)
-        target_df = read_df(spark, target, target_db, target_table[i], config)
+        source_df = read_df(spark, source, source_db, source_table[i], config, source_table_check)
+        target_df = read_df(spark, target, target_db, target_table[i], config, target_table_check)
 
         if target_df.schema:
             source_columns, final, final_map = map_df_columns(spark, source_df, target_df)
 
             if send_email_flag.lower() == 'true':
-                send_email(source_columns, final, source_db, source_table[i], target_db, target_table[i], env, config)
+                send_email(source_columns, final, source_db, source_table[i], target_db, target_table[i], config)
 
             if load_data.lower() == 'true':
                 map_df = convert_sourcedf_to_targetdf(source_df, column_percentage, job_type, final, final_map)

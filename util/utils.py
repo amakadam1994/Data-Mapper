@@ -8,6 +8,7 @@ from cryptography.fernet import Fernet
 def get_key_from_file(source):
     parent_path = os.path.abspath('')
     file = parent_path + '\config\decryption_keys.ini'
+    print(file)
     config = configparser.ConfigParser()
     config.read(file)
     return config[source][source + "_KEY"], config[source]["PASSWORD"]
@@ -60,7 +61,7 @@ def get_common_jars(parent_path, source, target, config):
     jars_set = add_jars_in_set(target_jars_comma_separated, parent_path, jars_set)
     return ','.join(map(str, jars_set))
 
-def send_email(source_columns, final, source_db, source_table, target_db, target_table, env, config):
+def send_email(source_columns, final, source_db, source_table, target_db, target_table, config):
 
     subject = 'Data-Mapper mapping for :{} vs {}'.format(source_table, target_table)
     content = 'The mapping for ' + source_table + ' from ' + source_db + ' vs ' + target_table + ' from ' + target_db + " \n\n"
@@ -70,7 +71,7 @@ def send_email(source_columns, final, source_db, source_table, target_db, target
         content = content + source_columns[i] + ":" + final[i] + "\n"
         file_content = file_content + source_columns[i] + ":" + final[i] + "\n"
 
-    if env == 'local':
+    if config['COMMON']['ENV'] == 'local':
         smtp_mail(config, subject, content)
     else:
         unix_mail()

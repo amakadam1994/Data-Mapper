@@ -2,7 +2,7 @@ from util.utils import get_decrypted_password
 
 
 class MySqlReader:
-    def read(spark, db_name, tbl_name, db_conf, common_config):
+    def read(spark, db_name, tbl_name, db_conf, common_config, exist_check_flag):
         password = get_decrypted_password('MYSQL', db_conf['DB_USER'], common_config)
         tbl_lst = tbl_name.split('&')
         join_cond = False
