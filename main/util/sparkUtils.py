@@ -15,10 +15,15 @@ def get_spark_session(jars, env):
 
 def local_spark_session(jars):
     if jars is None:
-        return SparkSession \
-            .master("local") \
-            .appName("DataMapper") \
-            .getOrCreate()
+        return (
+            SparkSession.builder.master("local[1]")
+                .appName("local-tests")
+                .config("spark.executor.cores", "1")
+                .config("spark.executor.instances", "1")
+                .config("spark.sql.shuffle.partitions", "1")
+                .config("spark.driver.bindAddress", "127.0.0.1")
+                .getOrCreate()
+        )
     else:
         return SparkSession \
             .builder.config("spark.jars", jars) \
@@ -29,7 +34,6 @@ def local_spark_session(jars):
 def get_df_columns(spark, df):
     schema = [i for i in df.schema]
     return schema
-
 
 def get_df_columns_list(schema):
     column_list = []
@@ -69,7 +73,6 @@ def get_datatype_converted_column(df, scolumn, sdata_type, tdata_type, new_colum
             return df.withColumn(new_column, df[scolumn])
     else:
         return df.withColumn(new_column, df[scolumn])
-
 
 def convert_data_type(source_df, target_df):
     source_schema = [i for i in source_df.schema]
